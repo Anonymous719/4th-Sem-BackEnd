@@ -3,7 +3,7 @@ const express = require('express');
 const {ReqAuth}= require("../middleware/auth.js")
 
 //Importing the fuction from Project Controller
-const{CreateProject,JoinProject,SetDesignation,getAllProjects,ViewProject,SetDeadline,SendMail, GetId,CheckMember,CheckCreater}
+const{CreateProject,JoinProject,SetDesignation,getAllProjects,ViewProject,SetDeadline,SendMail, GetId,CheckMember,CheckCreater,UpdateProject}
 =require("../controllers/ProjectController.js")
 
 
@@ -19,7 +19,7 @@ router.patch('/setdesignation/:projectid/:memberid',SetDesignation)
 router.get('/getall/',getAllProjects)
 router.get('/view/:projectid',ViewProject)
 router.patch('/setdeadline/:projectid',SetDeadline);
-
+router.patch('/update/:projectid',UpdateProject)
 router.post('/sendcode/:projectid',SendMail)
 
 // Routes for member and creater testing modules
