@@ -69,4 +69,16 @@ const GetName=async (req, res) =>{
             res.status(404).json({error:error.message})
         }
     }
-module.exports ={CreateProfile,UpdateProfile,GetName};
+    const GetNamebyToken=async (req, res) =>{
+        const userid=getuserid(req,res);
+        try{
+            const User=await Profile.findOne({_id:userid});
+            let name=User.name
+            res.status(200).json({name:name})
+        }
+        catch(error)
+        {
+            res.status(404).json({error:error.message})
+        }
+    }  
+module.exports ={CreateProfile,UpdateProfile,GetName,GetNamebyToken};

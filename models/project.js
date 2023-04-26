@@ -45,7 +45,12 @@ const ProjectSchema = new Schema({
                 default:" ",
                 length:20
             },
-    }]
+    }],
+    completedflag:{
+        type:"Boolean",
+        required:true,
+        default:false
+    },
 })
 
 
