@@ -294,34 +294,42 @@ const CheckCreater=  async (req,res)=>{
         res.status(400).json({error:error.message})
     }
 }
+
 const UpdateProject=  async (req,res)=>{
     const{projectid}=req.params
     const{iscomplete,deadline,details}=req.body
     const userid=getuserid(req,res);
     try{
-        const projectcheck= await Project.findOne({"createdby._id":userid,"_id":projectid})
+        const projectcheck=await Project.findOne({"createdby._id":userid,"_id":projectid})
         if(projectcheck){
-            if(!iscomplete){
-                const projectcheck= await Project.findOneAndUpdate(
-                {"createdby._id":userid,"_id":projectid},
-                {
-                 "details":details,
-                 "deadline":deadline},
-                {new:true})
-                res.status(200).json({message:"Project successfully updated"})
-            }
-            else{
-                const projectcheck= await Project.findOneAndUpdate(
+            const projectcreatercheck= await Project.findOne({"createdby._id":userid,"_id":projectid})
+            if(projectcreatercheck){
+                if(!iscomplete){
+                    const projectcheck= await Project.findOneAndUpdate(
                     {"createdby._id":userid,"_id":projectid},
-                    {"completedflag":iscomplete,
-                     "details":details,
-                     "deadline":deadline,
-                     "completedon":Date.now()},
+                    {
+                    "details":details,
+                    "deadline":deadline,
+                    "completedflag":iscomplete},
                     {new:true})
-                res.status(200).json({message:"Congratulation Project successfully completed"})
+                    res.status(200).json({message:"Project successfully updated"})
+                }
+                else{
+                    const projectcheck= await Project.findOneAndUpdate(
+                        {"createdby._id":userid,"_id":projectid},
+                        {"completedflag":iscomplete,
+                        "details":details,
+                        "deadline":deadline,
+                        "completedon":Date.now()},
+                        {new:true})
+                    res.status(200).json({message:"Congratulation Project successfully completed"})
+                }
+            }else{
+                throw Error("You are not manager of this project")
             }
-        }else{
-            throw Error("You are not manager of this project")
+        }
+        else{
+            throw Error("No such project exists")
         }
     }
     catch(error){
