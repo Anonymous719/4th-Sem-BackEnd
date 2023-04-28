@@ -20,7 +20,14 @@ const CreateAssignment= async(req,res)=>{
         const todo= await Assignment.findOne({_id:projectid})
 
         const project= await Project.findOne({_id:projectid,"createdby._id":userid})
-        if(!tag || !label|| !title|| !detail|| !deadline){
+        if(!tag || !label|| !title|| !detail|| !deadline||!point){
+            console.log(tag,
+                label,
+                title,
+                detail,
+                point,
+                assignedto,
+                deadline,)
             throw Error("Fill all the fields")
         }
         if(!project){
@@ -42,7 +49,9 @@ const CreateAssignment= async(req,res)=>{
                 }},
                 {new:true}
             )
+            console.log(createtask)
             res.status(200).json(createtask)
+            
             }
     }
     catch(error){
