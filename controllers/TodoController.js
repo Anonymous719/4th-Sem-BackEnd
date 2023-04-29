@@ -14,26 +14,19 @@ const CreateAssignment= async(req,res)=>{
     const{tag,label,title,point,detail,deadline,assignedto}=req.body
     const userid = getuserid(req,res)
     const {projectid}=req.params
-
+    
     try{
         //Checking if assignment document with given id exists
         const todo= await Assignment.findOne({_id:projectid})
-
         const project= await Project.findOne({_id:projectid,"createdby._id":userid})
-        if(!tag || !label|| !title|| !detail|| !deadline||!point){
-            console.log(tag,
-                label,
-                title,
-                detail,
-                point,
-                assignedto,
-                deadline,)
+        if(!tag || !label|| !title|| !detail|| !deadline){
             throw Error("Fill all the fields")
         }
         if(!project){
             throw Error("There is no such project of which you  are manager")
         }
         else{
+            const User=await Profile.findOne({_id:assignedto})
             const createtask= await Assignment.findOneAndUpdate(
                 {'_id':projectid},
                 {$push:{
@@ -44,14 +37,13 @@ const CreateAssignment= async(req,res)=>{
                         point:point,
                         detail:detail,
                         deadline:deadline,
-                        assignedto:assignedto
+                        "assignedto._id":assignedto,
+                        "assignedto.name":User.name
                     }
                 }},
                 {new:true}
             )
-            console.log(createtask)
             res.status(200).json(createtask)
-            
             }
     }
     catch(error){
@@ -64,7 +56,7 @@ const UpdateAssignment= async(req,res)=>{
     const{tag,label,title,point,detail,deadline,assignedto}=req.body
     const {projectid,todoid}=req.params
     const userid = getuserid(req,res)
-    
+    console.log(todoid)
     try{
         //Checking if assignment document with given id exists
         const project= await Project.findOne({_id:projectid,"members._id":userid})
@@ -79,12 +71,14 @@ const UpdateAssignment= async(req,res)=>{
                 const checktodo= await Assignment.findOne({"_id":projectid,"list._id":todoid})
                 // checking if  provided todop exists
                 if(!checktodo){
-                    throw Error("No such todo exist")
+                    throw Error("No such todo exist belonging to you")
                 }
                 else{
+                    console.log(1)
+                    const User=await Profile.findOne({_id:userid})
                     const updatetodo= await Assignment.findOneAndUpdate(
-                        {"_id":projectid,"list._id":todoid},
-                        {"$set":{
+                        {"list._id":todoid},
+                        {$set:{
                            /* use list.$.field option else 
                            if you use like with push of set:{list:{field}}
                            it will update the list with single updated object
@@ -95,25 +89,26 @@ const UpdateAssignment= async(req,res)=>{
                                 "list.$.point":point,
                                 "list.$.detail":detail,
                                 "list.$.deadline":deadline,
-                                "list.$.assignedto":assignedto
+                                "list.$.assignedto._id":assignedto,
+                                "list.$assignedto.name":User.name
                             }
                         },
                         {new:true}
                     )
-                    console.log(l)
+                    console.log()
                     res.status(200).send(updatetodo)
                 }
             }
             else{
-                const checktodo= await Assignment.findOne({"_id":projectid,"list._id":todoid})
+                const checktodo= await Assignment.findOne({"_id":projectid,"list._id":todoid,"list.assignedto":userid})
                 // checking if  provided todop exists
                 if(!checktodo){
-                    throw Error("No such todo exist")
+                    throw Error("No such todo exists assigned to you")
                 }
                 else{
                     const todo = await Assignment.findOneAndUpdate(
-                    {"_id":projectid,"list._id":todoid,"list.assignedto":userid},
-                        {"$set":{
+                        {"list._id":todoid},
+                        {$set:{
                            /* use list.$.field option else 
                            if you use like with push of set:{list:{field}}
                            it will update the list with single updated object
@@ -124,7 +119,7 @@ const UpdateAssignment= async(req,res)=>{
                         },
                         {new:true}
                     )
-                    console.log(todo)
+                    console.log(2)
                     res.status(200).send(todo)
                     }
                 }  
@@ -147,9 +142,9 @@ const ProjectProgress=async (req, res)=>{
                     {$unwind:"$list"},
                     {
                         $group:{
-                            _id:"$list.assignedto",
+                            _id:"$list.assignedto.name",
                             totalPoints:{$sum:"$list.point"},
-                            completedPoints: { $sum: { $cond: [{ $eq: ["$list.tag", "Complete"] }, "$list.point", 0] } }  
+                            completedPoints: { $sum: { $cond: [{ $eq: ["$list.tag", "Completed"] }, "$list.point", 0] } }  
                         }  
                     },
             ])
@@ -183,6 +178,7 @@ const UserProgress=async(req,res)=>{
     }
 }
 
+
 const ViewAssignment=async(req,res)=>{
     const {projectid}=req.params
     const userid = getuserid(req,res)
@@ -195,7 +191,28 @@ const ViewAssignment=async(req,res)=>{
          }else{
              // if project exists checking if the current user  the creater
              const todolist= await Assignment.find({"_id":projectid})
-             console.log(todolist)
+             res.status(200).json(todolist)
+        }
+        }catch(error)
+        {
+            res.status(404).json({error:error.message})
+        }
+}
+
+
+
+const ViewSelfAssignment=async(req,res)=>{
+    const {projectid}=req.params
+    const userid = getuserid(req,res)
+    try{
+         //Checking if assignment document with given id exists
+         const project= await Project.findOne({_id:projectid,"members._id":userid})
+         // Checking if such project exists
+         if(!project){
+             throw Error("You are not member of the project")
+         }else{
+             // if project exists checking if the current user  the creater
+             const todolist= await Assignment.find({"_id":projectid,"list.assignedto._id":userid},{"list.title":1,"list.deadline":1})
              res.status(200).json(todolist)
         }
         }catch(error)
@@ -208,5 +225,6 @@ module.exports={
     UpdateAssignment,
     ProjectProgress,
     UserProgress,
-    ViewAssignment
+    ViewAssignment,
+    ViewSelfAssignment
 }
