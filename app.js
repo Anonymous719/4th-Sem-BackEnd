@@ -17,7 +17,7 @@ app.use(cors());
 
 // Allow requests from specific origin
 app.use(cors({
-  origin: 'http://localhost:3001',
+  origin: 'http://localhost:3000',
   optionsSuccessStatus: 200
 }));
 
