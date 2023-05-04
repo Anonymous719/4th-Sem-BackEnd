@@ -10,9 +10,11 @@ const CreateResource= async (req,res)=>{
     const{title,link}=req.body
     const{projectid}=req.params
     const userid=getuserid(req,res)
-    
     try{
         const resource=await Resource.findOne({_id:projectid})
+        if(!title || !link){
+            throw Error("Fill all the fields")
+        }
         if(!resource){
             throw Error("Project with given id doesn't exist")
         }
@@ -22,7 +24,7 @@ const CreateResource= async (req,res)=>{
             if(!membercheck){
                 throw Error("You are not a member of this project")
             }else{
-                console.log(2)
+                // console.log(2)
                 const createresource=await Resource.findOneAndUpdate(
                     {'_id':projectid},
                     {$push:{
@@ -74,13 +76,15 @@ const ViewResource=async (req, res) => {
                 {$unwind:"$list"}, 
                 {$project:{
                     _id:0,
-                    title:"$list.name",
-                    link:"$list.detail",
+                    title:"$list.title",
+                    link:"$list.link",
+                    uploadedBy:"$list.uploadedBy",
                     createdAt:"$list.createdAt"
                     }
                 },
                 {$sort:{createdAt:-1}}
             ])
+            console.log(list)
             res.status(200).json(list)
             }
         }
