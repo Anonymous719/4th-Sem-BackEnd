@@ -62,7 +62,7 @@ const SeeMessage=async (req, res) => {
             Reminder again with aggregation we needd $ before fieldname
             */
 
-            const list = await Discussion.find({ _id: projectid }).sort({
+            const list = await Discussion.findOne({ _id: projectid }).sort({
                 createdAt: -1,
               });
             res.status(200).json(list)
